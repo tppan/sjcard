@@ -1261,6 +1261,38 @@ function App() {
     if (d.seeded) setSeeded(d.seeded);
     if (d.pinned) setPinned(d.pinned);
   };
+  const mergeData = (raw) => {
+    const d = JSON.parse(raw);
+    const incoming = d.cards || [];
+    const keyOf = (k) => k.unit + "|" + k.member + "|" + k.theme + "|" + k.grade;
+    const groupBy = (list) => {
+      const g = {};
+      list.forEach((k) => {
+        (g[keyOf(k)] = g[keyOf(k)] || []).push(k);
+      });
+      return g;
+    };
+    const A = groupBy(cards), B = groupBy(incoming);
+    const allKeys = /* @__PURE__ */ new Set([...Object.keys(A), ...Object.keys(B)]);
+    const merged = [];
+    let takenB = 0;
+    allKeys.forEach((key) => {
+      const a = A[key] || [], b = B[key] || [];
+      const sum = (l) => l.reduce((t, k) => t + (k.stars || 1), 0);
+      let pick;
+      if (b.length > a.length) pick = b;
+      else if (b.length < a.length) pick = a;
+      else pick = sum(b) > sum(a) ? b : a;
+      if (pick === b && b.length) takenB++;
+      merged.push(...pick);
+    });
+    setCards(merged);
+    if (d.units) setUnits(mergeUnits([...units, ...d.units]));
+    if (d.favs) setFavs([.../* @__PURE__ */ new Set([...favs, ...d.favs])]);
+    if (d.seeded) setSeeded([.../* @__PURE__ */ new Set([...seeded, ...d.seeded || []])]);
+    if (d.pinned) setPinned([.../* @__PURE__ */ new Set([...pinned, ...d.pinned || []])]);
+    return { total: merged.length, takenB };
+  };
   const cloudPull = async (silent) => {
     if (!cloudUrl) {
       setCloudMsg("\u8ACB\u5148\u8CBC\u4E0A\u540C\u6B65\u7DB2\u5740");
@@ -1460,7 +1492,10 @@ function App() {
       background: "radial-gradient(1200px 600px at 50% -10%, #14305C 0%, #0A1226 55%, #070C1A 100%)",
       color: "#DCE6F5",
       fontFamily: "'Noto Sans TC', 'PingFang TC', sans-serif",
-      paddingBottom: 90
+      paddingBottom: "calc(90px + env(safe-area-inset-bottom, 0px))",
+      paddingLeft: "env(safe-area-inset-left, 0px)",
+      paddingRight: "env(safe-area-inset-right, 0px)",
+      paddingTop: "env(safe-area-inset-top, 0px)"
     },
     header: { padding: "22px 18px 10px", maxWidth: 1180, margin: "0 auto" },
     card: {
@@ -1500,8 +1535,10 @@ function App() {
       borderTop: "1px solid rgba(120,160,220,.18)",
       display: "flex",
       justifyContent: "space-around",
-      padding: "10px 8px 18px",
-      zIndex: 50
+      zIndex: 50,
+      padding: "10px 8px calc(12px + env(safe-area-inset-bottom, 0px))",
+      paddingLeft: "calc(8px + env(safe-area-inset-left, 0px))",
+      paddingRight: "calc(8px + env(safe-area-inset-right, 0px))"
     },
     tabBtn: (active) => ({
       background: "none",
@@ -1674,7 +1711,7 @@ function App() {
     a.download = "sj-cards-" + (/* @__PURE__ */ new Date()).toISOString().slice(0, 10) + ".json";
     a.click();
     URL.revokeObjectURL(a.href);
-  } }, "\u532F\u51FA\u6A94\u6848"), /* @__PURE__ */ React.createElement("label", { style: { ...S.btn(false), flex: 1, textAlign: "center", cursor: "pointer" } }, "\u532F\u5165\u6A94\u6848", /* @__PURE__ */ React.createElement(
+  } }, "\u532F\u51FA\u6A94\u6848"), /* @__PURE__ */ React.createElement("label", { style: { ...S.btn(false), flex: 1, textAlign: "center", cursor: "pointer" } }, "\u532F\u5165\uFF08\u53D6\u4EE3\uFF09", /* @__PURE__ */ React.createElement(
     "input",
     {
       type: "file",
@@ -1687,7 +1724,7 @@ function App() {
         rd.onload = () => {
           try {
             applyCloudData(String(rd.result));
-            setCloudMsg("\u2705 \u5DF2\u5F9E\u6A94\u6848\u532F\u5165");
+            setCloudMsg("\u2705 \u5DF2\u532F\u5165\uFF08\u6574\u4EFD\u53D6\u4EE3\uFF09");
           } catch (err) {
             setCloudMsg("\u274C \u6A94\u6848\u683C\u5F0F\u932F\u8AA4");
           }
@@ -1697,7 +1734,30 @@ function App() {
         e.target.value = "";
       }
     }
-  ))))), /* @__PURE__ */ React.createElement("div", { style: S.tabBar }, /* @__PURE__ */ React.createElement("button", { style: S.tabBtn(tab === "dex"), onClick: () => setTab("dex") }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 19 } }, "\u25A6"), "\u5716\u9451"), /* @__PURE__ */ React.createElement("button", { style: S.tabBtn(tab === "upgrade"), onClick: () => setTab("upgrade") }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 19 } }, "\u2B06"), "\u5347\u7D1A\u5EFA\u8B70"), /* @__PURE__ */ React.createElement("button", { style: S.tabBtn(tab === "add"), onClick: () => setTab("add") }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 19 } }, "\uFF0B"), "\u65B0\u589E"), /* @__PURE__ */ React.createElement("button", { style: S.tabBtn(tab === "sync"), onClick: () => setTab("sync") }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 19 } }, "\u2601"), "\u540C\u6B65")));
+  )), /* @__PURE__ */ React.createElement("label", { style: { ...S.btn(true), flex: 1, textAlign: "center", cursor: "pointer" } }, "\u5408\u4F75\u532F\u5165", /* @__PURE__ */ React.createElement(
+    "input",
+    {
+      type: "file",
+      accept: "application/json,.json",
+      style: { display: "none" },
+      onChange: (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        const rd = new FileReader();
+        rd.onload = () => {
+          try {
+            const r = mergeData(String(rd.result));
+            setCloudMsg(`\u2705 \u5408\u4F75\u5B8C\u6210\uFF0C\u5171 ${r.total} \u5F35\uFF08\u63A1\u7528\u532F\u5165\u65B9 ${r.takenB} \u7D44\uFF09`);
+          } catch (err) {
+            setCloudMsg("\u274C \u6A94\u6848\u683C\u5F0F\u932F\u8AA4");
+          }
+          setTimeout(() => setCloudMsg(""), 4e3);
+        };
+        rd.readAsText(file);
+        e.target.value = "";
+      }
+    }
+  ))), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11.5, color: "#6C7A9C", lineHeight: 1.6 } }, "\u300C\u5408\u4F75\u532F\u5165\u300D\u6703\u6309\uFF08\u5361\u7D44\xD7\u6210\u54E1\xD7\u4E3B\u984C\xD7\u7B49\u7D1A\uFF09\u5206\u7D44\uFF0C\u5404\u7D44\u4FDD\u7559\u8F03\u5B8C\u6574\u7684\u4E00\u908A\uFF08\u5F35\u6578\u591A\u8005\u512A\u5148\u3001\u518D\u6BD4\u661F\u6578\uFF09\uFF0C \u9069\u5408\u628A Claude \u7248\u548C\u9019\u908A\u5404\u81EA\u6539\u904E\u7684\u8CC7\u6599\u5408\u8D77\u4F86\u3002\u5408\u4F75\u5F8C\u8A18\u5F97\u6309\u300C\u2B06 \u4E0A\u50B3\u5230\u96F2\u7AEF\u300D\u3002"))), /* @__PURE__ */ React.createElement("div", { style: S.tabBar }, /* @__PURE__ */ React.createElement("button", { style: S.tabBtn(tab === "dex"), onClick: () => setTab("dex") }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 19 } }, "\u25A6"), "\u5716\u9451"), /* @__PURE__ */ React.createElement("button", { style: S.tabBtn(tab === "upgrade"), onClick: () => setTab("upgrade") }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 19 } }, "\u2B06"), "\u5347\u7D1A\u5EFA\u8B70"), /* @__PURE__ */ React.createElement("button", { style: S.tabBtn(tab === "add"), onClick: () => setTab("add") }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 19 } }, "\uFF0B"), "\u65B0\u589E"), /* @__PURE__ */ React.createElement("button", { style: S.tabBtn(tab === "sync"), onClick: () => setTab("sync") }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 19 } }, "\u2601"), "\u540C\u6B65")));
 }
 </script>
 <script>
