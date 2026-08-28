@@ -27,6 +27,13 @@
   function realHeight() {
     return (window.visualViewport && window.visualViewport.height) || window.innerHeight;
   }
+  // 量測真實 safe-area-inset-bottom（home indicator 高度）
+  var safeProbe = document.createElement("div");
+  safeProbe.style.cssText = "position:fixed;bottom:0;left:0;width:0;height:env(safe-area-inset-bottom,0px);pointer-events:none;visibility:hidden;";
+  function safeBottom() {
+    if (!safeProbe.parentNode) document.body.appendChild(safeProbe);
+    return safeProbe.offsetHeight || 0;
+  }
   function setH() {
     var vv = window.visualViewport;
     var vh = (vv && vv.height) || window.innerHeight;
@@ -35,13 +42,13 @@
     document.body.style.height = hpx;
     var r = document.getElementById("root");
     if (r) r.style.height = hpx;
-    // 用 top 直接把膠囊放到「可視區底部 - 膠囊高 - 邊距」，比 bottom 更不受 layout viewport 影響
+    // 用 top 精準定位：可視區底 - 膠囊高 - (home indicator 高 + 邊距)
     var bar = document.getElementById("tabbar");
     if (bar) {
       var barH = bar.offsetHeight || 56;
-      var safe = 8;
+      var margin = safeBottom() + 8;   // 避開 home indicator，再留 8px
       var offTop = (vv && vv.offsetTop) || 0;
-      var topPx = offTop + vh - barH - safe;
+      var topPx = offTop + vh - barH - margin;
       bar.style.top = topPx + "px";
       bar.style.bottom = "auto";
     }
@@ -59,8 +66,13 @@
   if (document.getElementById("root")) setH();
   else window.addEventListener("DOMContentLoaded", setH);
   window.addEventListener("load", fixViewport);
-  // 首次載入時 iOS 常回報含安全區的錯誤 dvh；用 fixViewport（重設 viewport meta）逼它重算，模擬旋轉的效果
-  [80, 250, 500, 900].forEach(function (ms) { setTimeout(fixViewport, ms); });
+  // 首次載入 visualViewport 常還沒穩定 → 用連續動畫幀校正約 1.2 秒，抓到穩定值為止
+  var t0 = Date.now();
+  (function raf() {
+    setH();
+    if (Date.now() - t0 < 1200) requestAnimationFrame(raf);
+  })();
+  [120, 400, 700, 1100].forEach(function (ms) { setTimeout(fixViewport, ms); });
   window.addEventListener("orientationchange", function () { setTimeout(fixViewport, 200); });
   window.addEventListener("resize", setH);
   if (window.visualViewport) {
