@@ -10,11 +10,11 @@
 <title>SJ 卡片圖鑑</title>
 <style>
   * { box-sizing: border-box; }
-  html, body { margin:0; padding:0; width:100%; max-width:100%; height:100%; overflow:hidden; overscroll-behavior:none;
+  html, body { margin:0; padding:0; width:100%; max-width:100%; height:100vh; height:100dvh; overflow:hidden; overscroll-behavior:none;
     background:#070C1A; color:#E8EDF7;
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
     -webkit-text-size-adjust:100%; text-size-adjust:100%; }
-  #root { width:100%; height:100%; overflow:hidden; }
+  #root { width:100%; height:100vh; height:100dvh; overflow:hidden; }
   @keyframes tabfade { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
   .tabbtn { -webkit-tap-highlight-color: transparent; transition: transform .12s ease, background .15s ease; }
   .tabbtn:active { transform: scale(.88); }
@@ -37,23 +37,8 @@
     return safeProbe.offsetHeight || 0;
   }
   function setH() {
-    var vv = window.visualViewport;
-    var vh = realHeight();
-    var hpx = vh + "px";
-    document.documentElement.style.height = hpx;
-    document.body.style.height = hpx;
-    var r = document.getElementById("root");
-    if (r) r.style.height = hpx;
-    // 用 top 精準定位：可視區底 - 膠囊高 - (home indicator 高 + 邊距)
-    var bar = document.getElementById("tabbar");
-    if (bar) {
-      var barH = bar.offsetHeight || 56;
-      var margin = safeBottom() + 8;   // 避開 home indicator，再留 8px
-      var offTop = (vv && vv.offsetTop) || 0;
-      var topPx = offTop + vh - barH - margin;
-      bar.style.top = topPx + "px";
-      bar.style.bottom = "auto";
-    }
+    // 不再用 JS 鎖高度（會讓框框比螢幕矮）；改由 CSS 100% + dvh 自然填滿。
+    // 僅保留供事件呼叫，目前為空操作。
   }
   function fixViewport() {
     var vp = document.querySelector('meta[name="viewport"]');
