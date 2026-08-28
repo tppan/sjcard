@@ -14,7 +14,7 @@
     background:#070C1A; color:#E8EDF7;
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
     -webkit-text-size-adjust:100%; text-size-adjust:100%; }
-  #root { width:100%; height:100vh; height:100dvh; overflow:hidden; }
+  #root { width:100%; height:100%; overflow:hidden; }
   @keyframes tabfade { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
 </style>
 </head>
@@ -26,8 +26,11 @@
     return (window.visualViewport && window.visualViewport.height) || window.innerHeight;
   }
   function setH() {
+    var hpx = realHeight() + "px";
+    document.documentElement.style.height = hpx;
+    document.body.style.height = hpx;
     var r = document.getElementById("root");
-    if (r) r.style.height = realHeight() + "px";
+    if (r) r.style.height = hpx;
   }
   function fixViewport() {
     var vp = document.querySelector('meta[name="viewport"]');
