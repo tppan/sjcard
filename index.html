@@ -23,58 +23,7 @@
 <body>
 <div id="root"></div>
 <script>
-(function () {
-  function realHeight() {
-    var vv = window.visualViewport;
-    // 首次載入時 vv.height 或 innerHeight 可能一方偏小，取較大者避免框框沒滿到底
-    return Math.max((vv && vv.height) || 0, window.innerHeight || 0);
-  }
-  // 量測真實 safe-area-inset-bottom（home indicator 高度）
-  var safeProbe = document.createElement("div");
-  safeProbe.style.cssText = "position:fixed;bottom:0;left:0;width:0;height:env(safe-area-inset-bottom,0px);pointer-events:none;visibility:hidden;";
-  function safeBottom() {
-    if (!safeProbe.parentNode) document.body.appendChild(safeProbe);
-    return safeProbe.offsetHeight || 0;
-  }
-  function setH() {
-    // 不再用 JS 鎖高度（會讓框框比螢幕矮）；改由 CSS 100% + dvh 自然填滿。
-    // 僅保留供事件呼叫，目前為空操作。
-  }
-  function fixViewport() {
-    var vp = document.querySelector('meta[name="viewport"]');
-    if (vp) {
-      vp.setAttribute("content", "width=device-width, initial-scale=1.0001, viewport-fit=cover");
-      window.requestAnimationFrame(function () {
-        vp.setAttribute("content", "width=device-width, initial-scale=1, viewport-fit=cover");
-        setH();
-      });
-    } else setH();
-  }
-  // 模擬「旋轉」的本質：短暫把 root 縮 1px 逼瀏覽器重新量測可視區，再還原
-  function kick() {
-    var r = document.getElementById("root");
-    if (!r) return;
-    var vh = realHeight();
-    r.style.height = (vh - 1) + "px";
-    requestAnimationFrame(function () { setH(); requestAnimationFrame(setH); });
-  }
-  if (document.getElementById("root")) setH();
-  else window.addEventListener("DOMContentLoaded", setH);
-  window.addEventListener("load", function () { fixViewport(); kick(); });
-  // 首次載入 visualViewport 常還沒穩定 → 連續動畫幀校正約 1.2 秒
-  var t0 = Date.now();
-  (function raf() {
-    setH();
-    if (Date.now() - t0 < 1200) requestAnimationFrame(raf);
-  })();
-  [120, 400, 700, 1100].forEach(function (ms) { setTimeout(function () { fixViewport(); kick(); }, ms); });
-  window.addEventListener("orientationchange", function () { setTimeout(fixViewport, 200); });
-  window.addEventListener("resize", setH);
-  if (window.visualViewport) {
-    window.visualViewport.addEventListener("resize", setH);
-    window.visualViewport.addEventListener("scroll", setH);
-  }
-})();
+/* 版面完全交給 CSS（#root: fixed inset:0），不用任何 JS 校正高度 */
 </script>
 <script>
 window.storage = {
